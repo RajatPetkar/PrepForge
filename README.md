@@ -467,6 +467,7 @@ All configuration is done through `.env`. Here are the key variables:
 ---
 
 ## Example .env
+```bash
 APP_ENV=local
 API_HOST=0.0.0.0
 API_PORT=8000
@@ -479,7 +480,7 @@ QDRANT_API_KEY= api_key
 GROQ_API_KEY= groq_api_key
 JWT_SECRET= change-me-in-local-env
 CORS_ORIGINS= ["http://localhost:3000","http://localhost:5173"]
-
+```
 ## Accessing Services
 
 | Service | Internal URL (containers) | External URL (your machine) |
