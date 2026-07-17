@@ -1,0 +1,38 @@
+# Local run commands without Docker
+
+# From repo root:
+cd /home/rajat/ai-placement-assistant
+
+# One-time setup for local PostgreSQL data directory:
+mkdir -p .local/postgres .local/redis .local/logs
+initdb -D .local/postgres -U placement -A trust
+
+# Terminal 1: start PostgreSQL on local port 15432:
+cd /home/rajat/ai-placement-assistant
+postgres -D .local/postgres -k /home/rajat/ai-placement-assistant/.local/postgres -p 15432
+
+# Terminal 2: start Redis on local port 16379:
+cd /home/rajat/ai-placement-assistant
+redis-server --port 16379 --dir .local/redis --save 60 1 --appendonly yes
+
+# Terminal 3: start Qdrant on local ports 16333 and 16334:
+cd /home/rajat/ai-placement-assistant
+env QDRANT__SERVICE__HTTP_PORT=16333 QDRANT__SERVICE__GRPC_PORT=16334 ./qdrant --disable-telemetry
+
+# One-time setup after PostgreSQL is running:
+createdb -h 127.0.0.1 -p 15432 -U placement placement
+env DATABASE_URL=postgresql+asyncpg://placement:placement@127.0.0.1:15432/placement REDIS_URL=redis://127.0.0.1:16379/0 QDRANT_URL=http://127.0.0.1:16333 PYTHONPATH=apps/api/src .venv/bin/alembic -c apps/api/alembic.ini upgrade head
+
+# Terminal 4: start backend API:
+cd /home/rajat/ai-placement-assistant
+env DATABASE_URL=postgresql+asyncpg://placement:placement@127.0.0.1:15432/placement REDIS_URL=redis://127.0.0.1:16379/0 QDRANT_URL=http://127.0.0.1:16333 PYTHONPATH=apps/api/src .venv/bin/uvicorn placement_api.main:app --host 127.0.0.1 --port 8000 --reload
+
+# Terminal 5: start frontend:
+cd /home/rajat/ai-placement-assistant/apps/web
+env NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api/v1 npm run dev
+
+# URLs:
+# Frontend: http://localhost:3000
+# Backend health: http://127.0.0.1:8000/api/v1/health
+# API docs: http://127.0.0.1:8000/docs
+# Qdrant dashboard: http://localhost:16333/dashboard

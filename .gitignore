@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.local
+.local_data
+
+# Node
+node_modules/
+.next/
+dist/
+coverage/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Local storage
+storage/uploads/*
+storage/processed/*
+!storage/uploads/.gitkeep
+!storage/processed/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
