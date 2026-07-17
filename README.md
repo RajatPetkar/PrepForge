@@ -345,7 +345,7 @@ Run the entire project on any machine using Docker. No code, no manual setup —
 If you have the project folder, place it on the target machine. If not, clone it:
 
 ```bash
-git clone https://github.com/your-username/placement-assistant.git
+git clone [https://github.com/your-username/placement-assistant.git](https://github.com/RajatPetkar/PrepForge.git)
 cd placement-assistant
 ```
 
