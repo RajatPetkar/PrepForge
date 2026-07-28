@@ -1,4 +1,4 @@
-const API_URL = https://prepforge-1-az6j.onrender.com;
+const API_URL = 'https://prepforge-1-az6j.onrender.com/api/v1';
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
