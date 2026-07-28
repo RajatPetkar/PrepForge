@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from typing import Any
 
@@ -24,13 +25,22 @@ def simple_chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> 
     chunks = []
     start = 0
     text_length = len(text)
-    
+
     while start < text_length:
         end = start + chunk_size
         chunks.append(text[start:end])
         start += chunk_size - overlap
-    
+
     return chunks
+
+def _embed_dense_batch(texts: list[str]) -> list:
+    model = get_embedding_model()
+    return list(model.embed(texts))
+
+def _embed_sparse_batch(texts: list[str]) -> list:
+    from placement_api.services.search import get_sparse_embedding_model
+    model = get_sparse_embedding_model()
+    return list(model.embed(texts))
 
 async def process_and_index_document(
     session: AsyncSession,
@@ -38,48 +48,33 @@ async def process_and_index_document(
     text_content: str,
     metadata: dict[str, Any]
 ) -> DocumentVersion:
-    # 1. Create a DocumentVersion
-    doc_version = DocumentVersion(
-        document_id=document.id,
-        version=1,
-        checksum=str(hash(text_content)),
-        parser_version="v1",
-        embedding_model=MODEL_NAME,
-    )
-    session.add(doc_version)
-    await session.commit()
-    await session.refresh(doc_version)
-    
-    # 2. Chunk text
+    # 1. Chunk text
     text_chunks = simple_chunk_text(text_content)
-    
-    # 3. Generate embeddings
-    embed_model = get_embedding_model()
-    embeddings = list(embed_model.embed(text_chunks))
-    
-    from placement_api.services.search import get_sparse_embedding_model
-    sparse_model = get_sparse_embedding_model()
-    sparse_embeddings = list(sparse_model.embed(text_chunks))
-    
-    # 4. Store in Qdrant and Postgres
+
+    # 2. Generate embeddings off the event loop so we don't block FastAPI
+    embeddings, sparse_embeddings = await asyncio.gather(
+        asyncio.to_thread(_embed_dense_batch, text_chunks),
+        asyncio.to_thread(_embed_sparse_batch, text_chunks),
+    )
+
+    # 3. Build Qdrant points and DB rows (but don't commit to DB yet)
     qdrant = get_qdrant_client()
+    doc_version_id = uuid.uuid4()
     points = []
-    
+    db_chunks = []
+
     for i, (chunk_text, embedding, sparse) in enumerate(zip(text_chunks, embeddings, sparse_embeddings, strict=False)):
         q_point_id = str(uuid.uuid4())
-        
-        # Save to DB
-        db_chunk = Chunk(
-            document_version_id=doc_version.id,
+
+        db_chunks.append(Chunk(
+            document_version_id=doc_version_id,
             qdrant_point_id=q_point_id,
             chunk_index=i,
             content=chunk_text,
             content_hash=str(hash(chunk_text)),
-            metadata_=metadata
-        )
-        session.add(db_chunk)
-        
-        # Qdrant Point
+            metadata_=metadata,
+        ))
+
         payload = {
             "document_id": str(document.id),
             "user_id": str(document.uploaded_by_id),
@@ -100,14 +95,26 @@ async def process_and_index_document(
                 payload=payload
             )
         )
-        
-    await session.commit()
-    
-    # Upload to Qdrant
+
+    # 4. Upsert to Qdrant FIRST — if this fails, DB is untouched
     if points:
         await qdrant.upsert(
             collection_name="document_chunks",
             points=points
         )
-        
+
+    # 5. Now persist to PostgreSQL
+    doc_version = DocumentVersion(
+        id=doc_version_id,
+        document_id=document.id,
+        version=1,
+        checksum=str(hash(text_content)),
+        parser_version="v1",
+        embedding_model=MODEL_NAME,
+    )
+    session.add(doc_version)
+    for chunk in db_chunks:
+        session.add(chunk)
+    await session.commit()
+
     return doc_version

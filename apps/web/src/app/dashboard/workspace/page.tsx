@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { fetchApi } from "@/lib/api";
+import { fetchApi, API_URL } from "@/lib/api";
 import { toast } from "sonner";
 import { Loader2, Code2, Play, CheckCircle2, Circle, Sparkles, MessageSquare, BookOpen, Send, Bot, User, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -83,7 +83,7 @@ export default function WorkspacePage() {
       
       const payloadMessages = contextMsg ? [contextMsg, ...newMessages] : newMessages;
 
-      const res = await fetch(`https://prepforge-1-az6j.onrender.com/api/v1/chat/stream`, {
+      const res = await fetch(`${API_URL}/chat/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

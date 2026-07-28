@@ -1,4 +1,6 @@
+import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 
@@ -8,12 +10,36 @@ from placement_api.core.errors import register_exception_handlers
 from placement_api.core.logging import configure_logging
 from placement_api.core.middleware import configure_middleware
 
+logger = logging.getLogger(__name__)
+
+_ALEMBIC_DIR = Path(__file__).resolve().parents[2] / "migrations"
+
+
+def _run_migrations_sync() -> None:
+    """Run Alembic ``upgrade head`` synchronously.
+
+    Called once during application startup so that tables are always created
+    regardless of whether the app is started via Docker or ``uvicorn`` directly.
+    """
+    from alembic import command
+    from alembic.config import Config
+
+    alembic_cfg = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    alembic_cfg.set_main_option("script_location", str(_ALEMBIC_DIR))
+    alembic_cfg.set_main_option("sqlalchemy.url", get_settings().sync_database_url)
+    command.upgrade(alembic_cfg, "head")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Running database migrations ...")
+    _run_migrations_sync()
+    logger.info("Database migrations complete.")
+
     from placement_api.core.qdrant import init_qdrant_schema
     await init_qdrant_schema()
     yield
+
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the FastAPI application.
@@ -42,4 +68,3 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 
 app = create_app()
-

@@ -62,7 +62,11 @@ class DocumentVersion(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     embedding_model: Mapped[str] = mapped_column(String(160), nullable=False)
 
     document: Mapped["Document"] = relationship(back_populates="versions")
-    chunks: Mapped[list["Chunk"]] = relationship(back_populates="document_version")
+    chunks: Mapped[list["Chunk"]] = relationship(
+        back_populates="document_version",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class Chunk(UUIDPrimaryKeyMixin, TimestampMixin, Base):

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Brain, MessageSquare, LayoutDashboard, FileText, Building2, BookOpen, Shield, LogOut, ChevronRight, Code2, UserCircle } from "lucide-react";
+import { Brain, MessageSquare, LayoutDashboard, FileText, Database, Building2, BookOpen, Shield, LogOut, ChevronRight, Code2, UserCircle } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -17,10 +17,12 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { API_URL } from "@/lib/api";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "AI Chat", url: "/dashboard/chat", icon: MessageSquare },
+  { title: "Knowledge Base", url: "/dashboard/documents", icon: Database },
   { title: "Resume Analyzer", url: "/dashboard/resume", icon: FileText },
   { title: "Study Planner", url: "/dashboard/planner", icon: BookOpen },
   { title: "Code Workspace", url: "/dashboard/workspace", icon: Code2 },
@@ -42,7 +44,7 @@ export function AppSidebar() {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"}/auth/me`, {
+        const res = await fetch(`${API_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

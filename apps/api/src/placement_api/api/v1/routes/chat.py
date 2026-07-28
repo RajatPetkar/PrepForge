@@ -78,13 +78,20 @@ async def chat_stream(
     async def generate():
         assistant_content = ""
         async for chunk in stream_chat_response(formatted_messages, thread_id, request.pdf_context):
-            if chunk:
-                assistant_content += chunk
-                yield f"data: {json.dumps({'token': chunk})}\n\n"
+            if not chunk:
+                continue
+            # Citation events are already formatted as SSE lines – pass through directly
+            if chunk.startswith("data:"):
+                yield chunk
+                if "\n\n" not in chunk:
+                    yield "\n\n"
+                continue
+            assistant_content += chunk
+            yield f"data: {json.dumps({'token': chunk})}\n\n"
                 
         yield f"data: {json.dumps({'status': 'done', 'thread_id': thread_id})}\n\n"
         
-        # Save assistant message
+        # Save assistant message (without metadata tags)
         db_ast_msg = DBMessage(
             id=uuid.uuid4(),
             conversation_id=uuid.UUID(thread_id),

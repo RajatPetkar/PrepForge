@@ -8,8 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Upload, Loader2, CheckCircle, XCircle, Lightbulb, FileText, ArrowUpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const API_URL = 'https://prepforge-1-az6j.onrender.com/api/v1';
+import { API_URL } from "@/lib/api";
 
 interface ATSScore {
   overall_score: number;

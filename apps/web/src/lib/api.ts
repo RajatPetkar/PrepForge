@@ -1,4 +1,4 @@
-const API_URL = 'https://prepforge-1-az6j.onrender.com/api/v1';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -24,7 +24,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
       window.location.href = "/auth/login";
     }
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || "Something went wrong");
+    throw new Error(error.detail || error.message || "Something went wrong");
   }
 
   return response.json();

@@ -69,7 +69,7 @@ class MessageCitation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=False,
     )
     chunk_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("chunks.id", ondelete="RESTRICT"),
+        ForeignKey("chunks.id", ondelete="CASCADE"),
         index=True,
         nullable=False,
     )

@@ -1,3 +1,4 @@
+import json
 from collections.abc import AsyncGenerator
 from typing import Annotated, Any, TypedDict
 
@@ -120,28 +121,21 @@ async def stream_chat_response(messages_input: list[BaseMessage], thread_id: str
             config,
             stream_mode=["messages", "updates"]
         ):
-            # stream_mode=["messages", "updates"] yields tuples of (chunk_type, chunk_data)
             chunk_type = msg
             chunk_data = metadata
             
             if chunk_type == "updates":
-                # Updates contain the node outputs
                 if "retrieve" in chunk_data:
                     context = chunk_data["retrieve"].get("context", [])
-                    context_data = [
-                        {
-                            "id": c.get("id"), 
-                            "score": c.get("score"), 
-                            "citation": c.get("citation", f"Document Chunk {i+1}")
-                        }
-                        for i, c in enumerate(context)
-                    ]
-                    import json
-                    yield f"<CONTEXT_METADATA>{json.dumps(context_data)}</CONTEXT_METADATA>"
+                    citations = []
+                    for i, c in enumerate(context):
+                        citations.append({
+                            "score": c.get("score", 0),
+                            "title": c.get("citation", f"Source {i+1}"),
+                        })
+                    yield f"data: {json.dumps({'type': 'citations', 'citations': citations})}\n\n"
             
             elif chunk_type == "messages":
-                # msg_content is the actual message tuple
-                # chunk_data is actually (message_chunk, metadata) when stream_mode="messages"
                 msg_chunk, msg_metadata = chunk_data
                 if msg_chunk.content and msg_metadata.get("langgraph_node") == "generate":
                     yield msg_chunk.content

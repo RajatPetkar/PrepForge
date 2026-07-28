@@ -64,14 +64,9 @@ async def hybrid_search(
                 match=models.MatchValue(value=str(document_id))
             )
         )
-        
+
     query_filter = models.Filter(must=must_conditions) if must_conditions else None
-    
-    # Generate Sparse Vector
-    sparse_model = get_sparse_embedding_model()
-    sparse_result = list(sparse_model.embed([query]))[0]
-    # fastembed returns SparseEmbedding objects: .indices and .values
-    
+
     # Perform Search using Qdrant's prefetch functionality for RRF hybrid search
     prefetch = [
         models.Prefetch(
@@ -100,11 +95,13 @@ async def hybrid_search(
     
     reranked_points = []
     for point in results.points:
+        payload = point.payload or {}
+        filename = payload.get("filename") or payload.get("source", "Unknown")
         reranked_points.append({
             "id": point.id,
             "score": point.score,
-            "payload": point.payload,
-            "citation": f"Source: {point.payload.get('source', 'Unknown')} - Chunk: {point.payload.get('chunk_index', 'N/A')}"
+            "payload": payload,
+            "citation": filename,
         })
         
     # Return top K after reranking

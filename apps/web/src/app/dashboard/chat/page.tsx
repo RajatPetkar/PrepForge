@@ -7,10 +7,9 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User, Loader2, Sparkles, RotateCcw, Copy, Check, Paperclip, X, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { API_URL } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-const API_URL = 'https://prepforge-1-az6j.onrender.com/api/v1';
 
 interface Citation {
   score: number;
@@ -223,15 +222,18 @@ export default function ChatPage() {
           if (!dataStr || dataStr === "[DONE]") continue;
           try {
             const parsed = JSON.parse(dataStr);
-            if (parsed.token) {
+            if (parsed.type === "citations" && parsed.citations) {
+              accCitations = parsed.citations;
+              const citSnap = accCitations;
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                updated[updated.length - 1] = { ...last, citations: citSnap };
+                return updated;
+              });
+            } else if (parsed.token) {
               const tokenText: string = parsed.token;
-              const metaMatch = tokenText.match(/<CONTEXT_METADATA>([\.\s\S]*?)<\/CONTEXT_METADATA>/);
-              let cleanText = tokenText;
-              if (metaMatch) {
-                try { accCitations = JSON.parse(metaMatch[1]); } catch { /* ignore */ }
-                cleanText = tokenText.replace(metaMatch[0], "");
-              }
-              accText = accText + cleanText;
+              accText = accText + tokenText;
               const snapshot = accText;
               const citSnap = accCitations;
               setMessages((prev) => {

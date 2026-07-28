@@ -37,10 +37,12 @@ async def init_qdrant_schema() -> None:
             logger.info(f"Creating Qdrant collection: {collection_name}")
             await client.create_collection(
                 collection_name=collection_name,
-                vectors_config=models.VectorParams(
-                    size=vector_size,
-                    distance=models.Distance.COSINE
-                ),
+                vectors_config={
+                    "": models.VectorParams(
+                        size=vector_size,
+                        distance=models.Distance.COSINE
+                    )
+                },
                 sparse_vectors_config={
                     "text-sparse": models.SparseVectorParams(
                         modifier=models.Modifier.IDF

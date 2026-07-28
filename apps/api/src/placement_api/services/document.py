@@ -1,5 +1,7 @@
+import os
 import shutil
 import uuid
+from pathlib import Path
 
 from fastapi import UploadFile
 from sqlalchemy import select
@@ -9,7 +11,8 @@ from placement_api.db.enums import DocumentStatus
 from placement_api.models.document import Document
 from placement_api.schemas.document import DocumentCreate
 
-UPLOAD_DIR = "/home/rajat/ai-placement-assistant/storage/uploads"
+_PROJECT_ROOT = Path(__file__).resolve().parents[5]
+UPLOAD_DIR = str(_PROJECT_ROOT / "storage" / "uploads")
 
 async def create_document(session: AsyncSession, document_in: DocumentCreate, user_id: uuid.UUID) -> Document:
     document = Document(
