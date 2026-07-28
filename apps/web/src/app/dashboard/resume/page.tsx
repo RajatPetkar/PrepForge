@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Upload, Loader2, CheckCircle, XCircle, Lightbulb, FileText, ArrowUpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_URL = 'https://prepforge-1-az6j.onrender.com/api/v1';
 
 interface ATSScore {
   overall_score: number;
