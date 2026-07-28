@@ -1,4 +1,4 @@
-export const API_URL = 'https://prepforge-1-az6j.onrender.comapi/v1';
+export const API_URL = 'https://prepforge-1-az6j.onrender.comapi/api/v1';
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
