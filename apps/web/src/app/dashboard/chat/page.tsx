@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_URL = 'https://prepforge-1-az6j.onrender.com/api/v1';
 
 interface Citation {
   score: number;
