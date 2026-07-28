@@ -83,7 +83,7 @@ export default function WorkspacePage() {
       
       const payloadMessages = contextMsg ? [contextMsg, ...newMessages] : newMessages;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"}/chat/stream`, {
+      const res = await fetch(`https://prepforge-1-az6j.onrender.com/api/v1/chat/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
